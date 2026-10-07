@@ -15,3 +15,8 @@ pre-commit:
       run: bunx oxlint --deny-warnings {staged_files}
     - name: typecheck
       run: bun run typecheck
+
+pre-push:
+  jobs:
+    - name: checks on a clean copy of HEAD
+      run: scripts/check-clean-head.sh
