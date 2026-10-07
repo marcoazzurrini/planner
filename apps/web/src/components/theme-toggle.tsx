@@ -1,13 +1,9 @@
 import { useSyncExternalStore } from "react";
 
-type ThemeMode = "light" | "dark" | "auto";
+import type { ThemeMode } from "#/lib/theme";
+import { isThemeMode, nextThemeMode, resolveThemeMode } from "#/lib/theme";
 
 const STORAGE_KEY = "theme";
-const NEXT_MODE: Record<ThemeMode, ThemeMode> = {
-  auto: "light",
-  dark: "auto",
-  light: "dark",
-};
 const MODE_NAMES: Record<ThemeMode, string> = {
   auto: "Auto",
   dark: "Dark",
@@ -16,23 +12,17 @@ const MODE_NAMES: Record<ThemeMode, string> = {
 
 const listeners = new Set<() => void>();
 
-const isThemeMode = (value: string | null): value is ThemeMode =>
-  value === "light" || value === "dark" || value === "auto";
-
 const readMode = (): ThemeMode => {
   const stored = window.localStorage.getItem(STORAGE_KEY);
   return isThemeMode(stored) ? stored : "auto";
 };
 
-const prefersDark = () =>
-  window.matchMedia("(prefers-color-scheme: dark)").matches;
-
 const applyThemeMode = (mode: ThemeMode) => {
   const root = document.documentElement;
-  let resolved: "light" | "dark" = mode === "dark" ? "dark" : "light";
-  if (mode === "auto" && prefersDark()) {
-    resolved = "dark";
-  }
+  const resolved = resolveThemeMode(
+    mode,
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+  );
 
   root.classList.remove("light", "dark");
   root.classList.add(resolved);
@@ -67,7 +57,7 @@ const ThemeToggle = () => {
   const mode = useSyncExternalStore(subscribe, readMode, getServerMode);
 
   const toggleMode = () => {
-    const nextMode = NEXT_MODE[mode];
+    const nextMode = nextThemeMode(mode);
     window.localStorage.setItem(STORAGE_KEY, nextMode);
     applyThemeMode(nextMode);
     for (const listener of listeners) {
