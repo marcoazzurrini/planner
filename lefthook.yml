@@ -1,0 +1,22 @@
+pre-commit:
+  piped: true
+  jobs:
+    - name: format
+      glob: "*.{js,jsx,ts,tsx,mjs,cjs,mts,cts,json,jsonc,css,html,md,mdx,yml,yaml}"
+      exclude:
+        - apps/web/src/routeTree.gen.ts
+        - bun.lock
+      run: bunx oxfmt --write {staged_files}
+      stage_fixed: true
+    - name: lint
+      glob: "*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+      exclude:
+        - apps/web/src/routeTree.gen.ts
+      run: bunx oxlint --deny-warnings {staged_files}
+    - name: typecheck
+      run: bun run typecheck
+
+pre-push:
+  jobs:
+    - name: checks on a clean copy of HEAD
+      run: scripts/check-clean-head.sh
